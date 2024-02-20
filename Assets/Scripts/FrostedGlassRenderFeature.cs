@@ -7,10 +7,13 @@ public class FrostedGlassRenderFeature : ScriptableRendererFeature
     class FrostedGlassRenderPass : ScriptableRenderPass
     {
         // 定义材质和其他渲染相关参数
+        private static readonly string k_RenderTag = "Render Custom Layer Objects";
         private Material frostedGlassMaterial;
+        private int overrideMaterialPassIndex = 0;
         private string profilerTag = "FrostedGlassRenderPass";
         private RenderTargetIdentifier source;
         private RTHandle temporaryRT;
+        private FilteringSettings filteringSettings;
 
         public FrostedGlassRenderPass(Material material)
         {
@@ -27,16 +30,29 @@ public class FrostedGlassRenderFeature : ScriptableRendererFeature
 
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
-            CommandBuffer cmd = CommandBufferPool.Get(profilerTag);
+            // 创建DrawingSettings
+            var drawingSettings = new DrawingSettings(new ShaderTagId("UniversalForward"), new SortingSettings(renderingData.cameraData.camera))
+            {
+                overrideMaterial = this.frostedGlassMaterial,
+                overrideMaterialPassIndex = this.overrideMaterialPassIndex
+            };
+            
+            // 从RenderingData获取Camera的CullingResults
+            var cullingResults = renderingData.cullResults;
 
-            // 使用材质执行自定义后处理效果
-            cmd.Blit(renderingData.cameraData.renderer.cameraColorTarget, temporaryRT, frostedGlassMaterial);
-            cmd.Blit(temporaryRT, renderingData.cameraData.renderer.cameraColorTarget);
-
-            context.ExecuteCommandBuffer(cmd);
-            cmd.Clear();
-
-            CommandBufferPool.Release(cmd);
+            // 执行实际的绘制调用
+            context.DrawRenderers(cullingResults, ref drawingSettings, ref filteringSettings);
+            
+            // CommandBuffer cmd = CommandBufferPool.Get(profilerTag);
+            //
+            // // 使用材质执行自定义后处理效果
+            // cmd.Blit(renderingData.cameraData.renderer.cameraColorTarget, temporaryRT, frostedGlassMaterial);
+            // cmd.Blit(temporaryRT, renderingData.cameraData.renderer.cameraColorTarget);
+            //
+            // context.ExecuteCommandBuffer(cmd);
+            // cmd.Clear();
+            //
+            // CommandBufferPool.Release(cmd);
         }
 
         public override void OnCameraCleanup(CommandBuffer cmd)

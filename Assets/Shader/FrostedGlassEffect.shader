@@ -44,21 +44,21 @@ Shader "Custom/FrostedGlassEffect"
             float4 frag (v2f i) : SV_Target
             {
                 float2 uv = i.uv;
-                float4 col = float4(0,0,0,0);
+                float4 col = float4(1,0,0,0);
 
-                // Simple box blur
-                int samples = 9;
-                float blur = _BlurAmount * 0.002; // Blur size
-                for(int x = -1; x <= 1; ++x)
-                {
-                    for(int y = -1; y <= 1; ++y)
-                    {
-                        float2 sampleUv = uv + float2(x, y) * blur;
-                        col += tex2D(_MainTex, sampleUv);
-                    }
-                }
-
-                col /= samples;
+                // // Simple box blur
+                // int samples = 9;
+                // float blur = _BlurAmount * 0.002; // Blur size
+                // for(int x = -1; x <= 1; ++x)
+                // {
+                //     for(int y = -1; y <= 1; ++y)
+                //     {
+                //         float2 sampleUv = uv + float2(x, y) * blur;
+                //         col += tex2D(_MainTex, sampleUv);
+                //     }
+                // }
+                //
+                // col /= samples;
                 return col;
             }
             ENDCG
