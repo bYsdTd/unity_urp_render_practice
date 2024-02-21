@@ -8,7 +8,7 @@ Shader "Custom/EdgeStretchScreenSpace"
     {
         Tags { "RenderType"="Opaque" }
         LOD 100
-
+        Cull Off
         Pass
         {
             CGPROGRAM
@@ -41,7 +41,7 @@ Shader "Custom/EdgeStretchScreenSpace"
 
             fixed4 frag (v2f i) : SV_Target
             {
-                return fixed4(1, 0, 0, 1);
+                // return fixed4(i.uv, 0, 1);
                 float2 uv = i.uv;
                 // 中心保持区域的UV范围
                 float2 minUV = float2(0.25, 0.25);

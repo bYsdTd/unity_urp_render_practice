@@ -8,7 +8,7 @@ using UnityEngine.Rendering.Universal;
 [RequireComponent(typeof(MeshFilter))]
 public class CustomRenderFeatureController : MonoBehaviour
 {
-    public CustomRenderPassFeature renderPassFeature;
+    private CustomRenderPassFeature renderPassFeature;
     // Start is called before the first frame update
     private void Start()
     {
