@@ -239,7 +239,7 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 1
+  m_RenderPostProcessing: 0
   m_Antialiasing: 0
   m_AntialiasingQuality: 2
   m_StopNaN: 0
@@ -515,7 +515,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 61f62064d0521e940825cac5ed43a5a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  renderPassFeature: {fileID: 0}
 --- !u!64 &826017770
 MeshCollider:
   m_ObjectHideFlags: 0

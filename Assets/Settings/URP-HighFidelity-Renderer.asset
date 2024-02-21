@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f62c9c65cf3354c93be831c8bc075510, type: 3}
   m_Name: SSAO
   m_EditorClassIdentifier: 
-  m_Active: 1
+  m_Active: 0
   m_Settings:
     AOMethod: 1
     Downsample: 0
@@ -53,9 +53,8 @@ MonoBehaviour:
     hdrDebugViewPS: {fileID: 4800000, guid: 573620ae32aec764abd4d728906d2587, type: 3}
   m_RendererFeatures:
   - {fileID: -1878332245247344467}
-  - {fileID: 8662160772426661548}
   - {fileID: 6257319428659191286}
-  m_RendererFeatureMap: adc0de57c6d2eee5ac7ed013542d3678f69d611fde76d656
+  m_RendererFeatureMap: adc0de57c6d2eee5f69d611fde76d656
   m_UseNativeRenderPass: 0
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   xrSystemData: {fileID: 11400000, guid: 60e1133243b97e347b653163a8c01b64, type: 2}
@@ -115,18 +114,5 @@ MonoBehaviour:
   screenMaterial: {fileID: 2100000, guid: 54f81f2299df6064482c2d32dd3b77d8, type: 2}
   targetMesh: {fileID: 0}
   targetMeshTransform: {fileID: 0}
---- !u!114 &8662160772426661548
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec317140acdf0a345af91a221b473c44, type: 3}
-  m_Name: FrostedGlassRenderFeature
-  m_EditorClassIdentifier: 
-  m_Active: 0
-  frostedGlassMaterial: {fileID: 2100000, guid: 617b8e6a3e444054a8fcebbc0c154c79,
-    type: 2}
+  blurHorizon: {fileID: 2100000, guid: aea00bac4d2f39246bd2a05a26ce9cd3, type: 2}
+  blurVertical: {fileID: 2100000, guid: 1ccaa23540791ca4cb50586d1aa62075, type: 2}
