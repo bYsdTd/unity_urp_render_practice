@@ -26,6 +26,10 @@ public class CustomRenderPassFeature : ScriptableRendererFeature
         private readonly int _blurResultId2 = Shader.PropertyToID("_BlurVideoTexture2");
         
         // 开始拉伸像素以后结果的存储, 同时也是最后存储模糊的结果
+        private RenderTargetIdentifier _extendResultRT;
+        private readonly int _extendResultId = Shader.PropertyToID("_ExtendVideoTexture");
+        
+        // 开始拉伸像素以后结果的存储, 同时也是最后存储模糊的结果
         private RenderTargetIdentifier _blurResultRT;
         private readonly int _blurResultId = Shader.PropertyToID("_BlurVideoTexture");
 
@@ -78,7 +82,7 @@ public class CustomRenderPassFeature : ScriptableRendererFeature
             this.screenMaterial = screenMaterial;
             this._targetMesh = mesh;
             this._targetMeshTransform = transform;
-            renderPassEvent = RenderPassEvent.AfterRenderingOpaques;
+            renderPassEvent = RenderPassEvent.AfterRenderingSkybox;
         }
         
         public void UpdateTransform(Matrix4x4 newMatrix)
@@ -104,6 +108,10 @@ public class CustomRenderPassFeature : ScriptableRendererFeature
             }
 
             _sourceTextureSize = new Vector2(sourceRTDescriptor.width, sourceRTDescriptor.height);
+            
+            // extend result RT
+            cmd.GetTemporaryRT(_extendResultId, sourceRTDescriptor);
+            _extendResultRT = new RenderTargetIdentifier(_extendResultId);
             
             // blur final pass RT
             cmd.GetTemporaryRT(_blurResultId, sourceRTDescriptor);
@@ -146,8 +154,8 @@ public class CustomRenderPassFeature : ScriptableRendererFeature
         {
             CommandBuffer cmd = CommandBufferPool.Get("RenderSpatialVideoEffect");
             // 设置临时RT为目标，并清除
-            cmd.SetRenderTarget(_blurResultRT);
-            cmd.ClearRenderTarget(true, true, Color.clear);
+            cmd.SetRenderTarget(_extendResultRT);
+            // cmd.ClearRenderTarget(true, true, Color.clear);
             
             // 使用传入的Mesh对象和Transform信息绘制Mesh
             if ( edgeStretchMaterial != null)
@@ -156,7 +164,7 @@ public class CustomRenderPassFeature : ScriptableRendererFeature
             }
 
             // blur pass
-            BlurPass(cmd, _blurResultId);
+            BlurPass(cmd);
             
             // 渲染到屏幕
             cmd.SetRenderTarget(_currentTarget);
@@ -170,10 +178,10 @@ public class CustomRenderPassFeature : ScriptableRendererFeature
             CommandBufferPool.Release(cmd);
         }
 
-        private void BlurPass(CommandBuffer cmd, int blurResultId)
+        private void BlurPass(CommandBuffer cmd)
         {
             // 1 pass
-            Draw(blurResultId, _blurResultId0, _sourceTextureSize, 
+            Draw(_extendResultId, _blurResultId0, _sourceTextureSize, 
                 _sourceTextureSize / 2, cmd);
             // 2 pass 
             _sourceTextureSize /= 2;
@@ -187,7 +195,7 @@ public class CustomRenderPassFeature : ScriptableRendererFeature
             
             // 4 pass 
             _sourceTextureSize /= 2;
-            Draw(_blurResultId2, blurResultId, _sourceTextureSize, 
+            Draw(_blurResultId2, _blurResultId, _sourceTextureSize, 
                 _sourceTextureSize / 2, cmd);
         }
         
@@ -224,6 +232,7 @@ public class CustomRenderPassFeature : ScriptableRendererFeature
             cmd.ReleaseTemporaryRT(_blurResultId1);
             cmd.ReleaseTemporaryRT(_blurResultId2);
             cmd.ReleaseTemporaryRT(_blurResultId);
+            cmd.ReleaseTemporaryRT(_extendResultId);
         }
     }
 
