@@ -12,10 +12,6 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
     class CustomRenderPass : ScriptableRenderPass
     {
         private SpatialVideoRenderPassFeature _owner;
-        // private RenderTargetIdentifier tempRT; // 临时RT标识符
-        // private int blurResultId = Shader.PropertyToID("_BlurVideoTexture"); // 临时RT的ID
-        // 假设这是在你的RenderFeature或其他合适的地方进行初始化
-        // private RenderTexture persistentRT = null;
         
         // 渲染模糊的结果RT
         private RenderTargetIdentifier _blurResultRT0;
@@ -72,6 +68,7 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
         private Vector2 _backPlaneSize;
         private Vector3 _backPlanePosition;
         private Vector3 _backPlaneNormal;
+        private int _Layout = 1;
         
         private Matrix4x4 _backPlaneWorldToLocal;
         
@@ -118,7 +115,11 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
                 sourceRTDescriptor.height = 1080;
             }
 
+            // TODO： 这里处理2D，3DLR，3DTB
+            // 目前考虑是3D，LR的情况
+            sourceRTDescriptor.width /= 2;
             _sourceTextureSize = new Vector2(sourceRTDescriptor.width, sourceRTDescriptor.height);
+            
             
             // blur final pass RT
             cmd.GetTemporaryRT(_blurResultId, sourceRTDescriptor);
@@ -208,16 +209,17 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
                 0, FilterMode.Bilinear, GraphicsFormat.R8G8B8A8_UNorm);
             
             buffer.SetRenderTarget(tempId);
+            _owner.blurHorizon.SetVector("_SourceTextureSize", new Vector4(sourceSize.x, sourceSize.y, 0f, 0f));
             if (isOrigin)
             {
                 buffer.SetGlobalTexture("_SourceTexture", screenMaterial.mainTexture);
+                buffer.DrawMesh(GetMesh(), Matrix4x4.identity, _owner.blurHorizonOrigin);
             }
             else
             {
                 buffer.SetGlobalTexture("_SourceTexture", sourceId);
+                buffer.DrawMesh(GetMesh(), Matrix4x4.identity, _owner.blurHorizon);
             }
-            _owner.blurHorizon.SetVector("_SourceTextureSize", new Vector4(sourceSize.x, sourceSize.y, 0f, 0f));
-            buffer.DrawMesh(GetMesh(), Matrix4x4.identity, _owner.blurHorizon);
             
             // vertical
             buffer.SetRenderTarget(targetId);
@@ -248,6 +250,8 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
     public Mesh targetMesh; // 场景中目标Mesh对象
     [NonSerialized]
     public Transform targetMeshTransform; // 目标Mesh的Transform
+
+    public Material blurHorizonOrigin;
     public Material blurHorizon;
     public Material blurVertical;
 

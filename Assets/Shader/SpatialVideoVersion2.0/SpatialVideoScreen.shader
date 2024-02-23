@@ -6,6 +6,7 @@ Shader "Custom/SpatialVideoScreen"
         _MaskTex("Mask", 2D) = "white" {}
         _PlaneSize("size of the Back Plane", Vector) = (1920, 1080, 0, 0)
         _PlanePosition ("Position of the Back Plane", Vector) = (0,0,0,0)
+        _Layout("2D or LR or TB", Int) = 0
     }
     SubShader
     {
@@ -43,6 +44,7 @@ Shader "Custom/SpatialVideoScreen"
             float2 _PlaneSize;
             float4 _PlanePosition;
             float3 _PlaneNormal;
+            int _Layout; // 0 2d; 1 LR; 2 TB
             float4x4 _PlaneWorldToLocalMatrix;
             
             float2 ComputeUV(appdata v)
@@ -101,6 +103,15 @@ Shader "Custom/SpatialVideoScreen"
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.uv = ComputeUV2(v);
+
+                if (_Layout == 1)
+                {
+                    o.uv.x = o.uv.x * 0.5 + step(0.5, unity_StereoEyeIndex) * 0.5;
+                }
+                else if (_Layout == 2)
+                {
+                    o.uv.y = o.uv.y * 0.5 + step(0.5, unity_StereoEyeIndex) * 0.5;
+                }
                 
                 return o;
             }

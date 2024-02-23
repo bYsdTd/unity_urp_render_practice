@@ -4,6 +4,7 @@ Shader "Wangsd/GaussinBlurHorizon"
     {
         _MainTex ("Texture", 2D) = "white" {}
         _SourceTextureSize("TextureSize", Vector) = (100, 100, 0 , 0)
+        _Layout("2D or LR or TB", Int) = 0
     }
     SubShader
     {
@@ -38,7 +39,8 @@ Shader "Wangsd/GaussinBlurHorizon"
 
             sampler2D _MainTex;
             float4 _MainTex_ST;
-
+            int _Layout; // 0 2d; 1 LR; 2 TB
+            
             sampler2D _SourceTexture;
 
             float4 _SourceTextureSize;
@@ -49,6 +51,16 @@ Shader "Wangsd/GaussinBlurHorizon"
                 //o.vertex = UnityObjectToClipPos(v.vertex);
                 o.vertex = v.vertex;
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+
+                if (_Layout == 1)
+                {
+                    o.uv.x = o.uv.x * 0.5 + step(0.5, unity_StereoEyeIndex) * 0.5;
+                }
+                else if (_Layout == 2)
+                {
+                    o.uv.y = o.uv.y * 0.5 + step(0.5, unity_StereoEyeIndex) * 0.5;
+                }
+                
                 UNITY_TRANSFER_FOG(o,o.vertex);
                 return o;
             }
