@@ -39,7 +39,9 @@ Material:
     m_Floats:
     - _PlaneDistance: 1
     - _PlaneHeight: 2
-    - _PlaneWidth: 4
+    - _PlaneWidth: 2.8158922
     m_Colors:
-    - _PlanePosition: {r: 0, g: 0, b: 0.42, a: 0}
+    - _PlanePosition: {r: -0.2359299, g: 1.5094479, b: 1.8121872, a: 0}
+    - _PlaneRotation: {r: 0.13087413, g: 298.77017, b: 0.03347252, a: 0}
+    - _PlaneSize: {r: 5.9292016, g: 2.350485, b: 0, a: 0}
   m_BuildTextureStacks: []

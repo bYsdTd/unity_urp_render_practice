@@ -42,12 +42,11 @@ Shader "Custom/SpatialVideoScreen"
             
             float2 _PlaneSize;
             float4 _PlanePosition;
+            float3 _PlaneNormal;
+            float4x4 _PlaneWorldToLocalMatrix;
             
-            v2f vert (appdata v)
+            float2 ComputeUV(appdata v)
             {
-                v2f o;
-                o.vertex = UnityObjectToClipPos(v.vertex);
-                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 // 获取摄像机位置和前平面顶点的世界空间位置
                 float3 worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
                 float3 cameraPos = _WorldSpaceCameraPos;
@@ -60,11 +59,53 @@ Shader "Custom/SpatialVideoScreen"
                 float3 hitPoint = cameraPos + rayDir * t;
                 
                 // 根据后平面的位置和大小计算UV
-                o.uv = (hitPoint.xy - _PlanePosition.xy) / _PlaneSize + 0.5;
+                return  (hitPoint.xy - _PlanePosition.xy) / _PlaneSize + 0.5;
+            }
+
+            float2 ComputeUV2(appdata v)
+            {
+                // _PlaneNormal = float3(0,0,1);
+                // 获取摄像机位置和前平面顶点的世界空间位置
+                float3 worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
+                float3 cameraPos = _WorldSpaceCameraPos;
+
+                // 计算从摄像机到前平面顶点的射线方向
+                float3 rayDir = normalize(worldPos - cameraPos);
+
+                // 后平面的法线和一个点P0（假设是平面的中心位置）
+                float3 planeNormal = _PlaneNormal;
+                float3 planePoint = _PlanePosition;
+
+                // 计算射线与平面的交点t
+                float denom = dot(planeNormal, rayDir);
+                if (abs(denom) > 1e-6) // 避免除以零
+                {
+                    float t = dot(planePoint - cameraPos, planeNormal) / denom;
+                    float3 hitPoint = cameraPos + t * rayDir;
+
+                    // 将交点转换为后平面的局部坐标系中
+                    float3 localHitPoint = mul(_PlaneWorldToLocalMatrix, float4(hitPoint, 1)).xyz;
+
+                    // 假设后平面局部坐标系与UV对齐，并且局部坐标系的范围是[-0.5, 0.5]，则可以直接使用localHitPoint计算UV
+                    return  localHitPoint.xy + float2(0.5, 0.5);
+                }
+                else
+                {
+                    // 射线与平面平行，没有交点
+                    return  float2(0.5, 0.5); // 或其他默认值
+                }    
+            }
+            
+            v2f vert (appdata v)
+            {
+                v2f o;
+                o.vertex = UnityObjectToClipPos(v.vertex);
+                o.uv = ComputeUV2(v);
                 
                 return o;
             }
 
+            
             fixed4 frag (v2f i) : SV_Target
             {
                 float2 uv = i.uv;

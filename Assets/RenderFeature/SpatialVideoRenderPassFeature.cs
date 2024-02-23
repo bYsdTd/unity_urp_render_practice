@@ -71,7 +71,9 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
 
         private Vector2 _backPlaneSize;
         private Vector3 _backPlanePosition;
-        // private Matrix4x4 _backPlaneWorldToLocal;
+        private Vector3 _backPlaneNormal;
+        
+        private Matrix4x4 _backPlaneWorldToLocal;
         
         // 修改构造函数以接收Mesh对象和其Transform
         public CustomRenderPass(Material screenMaterial, Mesh mesh, Matrix4x4 transform, SpatialVideoRenderPassFeature owner)
@@ -89,9 +91,14 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
             _targetMeshTransform = newMatrix;
             _backPlaneSize = new Vector2(newMatrix.m00, newMatrix.m11);
             _backPlanePosition = trans.position + trans.forward * _backPlaneDistance;
+            _backPlaneNormal = trans.forward;
             
-            // trans.Translate(trans.forward * _backPlaneDistance);
-            // _backPlaneWorldToLocal = trans.worldToLocalMatrix;
+            // 使用原始的旋转和缩放，因为我们只改变位置
+            Quaternion _backPlaneRotation = trans.rotation;
+            Vector3 _backPlaneScale = trans.localScale;
+
+            // 构造新的世界空间到局部空间的变换矩阵
+            _backPlaneWorldToLocal = Matrix4x4.TRS(_backPlanePosition, _backPlaneRotation, _backPlaneScale).inverse;
         }
 
         public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
@@ -163,7 +170,8 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
             {
                 screenMaterial.SetVector("_PlaneSize",_backPlaneSize);
                 screenMaterial.SetVector("_PlanePosition", _backPlanePosition);
-                // screenMaterial.SetMatrix("", _backPlaneWorldToLocal);
+                screenMaterial.SetMatrix("_PlaneWorldToLocalMatrix", _backPlaneWorldToLocal);
+                screenMaterial.SetVector("_PlaneNormal", _backPlaneNormal);
                 cmd.DrawMesh(_targetMesh, _targetMeshTransform, screenMaterial);
             }
             
