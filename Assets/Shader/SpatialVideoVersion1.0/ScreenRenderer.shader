@@ -5,7 +5,6 @@ Shader "Custom/ScreenRenderer"
         _MainTex ("Texture", 2D) = "white" {}
         _MaskTex("Mask", 2D) = "white" {}
         _MaskTex2("Mask", 2D) = "white" {}
-        _PlaneDistance ("Distance Between Planes", Float) = 1.0
         _PlaneWidth ("Width of the Back Plane", Float) = 1.0
         _PlaneHeight ("Height of the Back Plane", Float) = 1.0
         _PlanePosition ("Position of the Back Plane", Vector) = (0,0,0,0)
@@ -45,7 +44,6 @@ Shader "Custom/ScreenRenderer"
             sampler2D _MaskTex;
             sampler2D _MaskTex2;
             
-            float _PlaneDistance;
             float _PlaneWidth;
             float _PlaneHeight;
             float4 _PlanePosition;
@@ -110,11 +108,9 @@ Shader "Custom/ScreenRenderer"
                 // col = lerp(blur, col, blendFactor);
                 
                 
-                float t = tex2D(_MaskTex, i.rawUV).r;
-                col = blur*t + col*(1-t);
+                // float t = tex2D(_MaskTex, i.rawUV).r;
+                // col = blur*t + col*(1-t);
 
-                // float mask = tex2D(_MaskTex, i.rawUV).r;
-                // col = blur*t + col*(1-mask);
                 
                 return col;
             }

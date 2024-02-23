@@ -5,13 +5,13 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.Serialization;
 
-public class CustomRenderPassFeature : ScriptableRendererFeature
+public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
 {
     // 单例实例
-    public static CustomRenderPassFeature Instance { get; private set; }
+    public static SpatialVideoRenderPassFeature Instance { get; private set; }
     class CustomRenderPass : ScriptableRenderPass
     {
-        private CustomRenderPassFeature _owner;
+        private SpatialVideoRenderPassFeature _owner;
         // private RenderTargetIdentifier tempRT; // 临时RT标识符
         // private int blurResultId = Shader.PropertyToID("_BlurVideoTexture"); // 临时RT的ID
         // 假设这是在你的RenderFeature或其他合适的地方进行初始化
@@ -24,10 +24,6 @@ public class CustomRenderPassFeature : ScriptableRendererFeature
         private readonly int _blurResultId1 = Shader.PropertyToID("_BlurVideoTexture1");
         private RenderTargetIdentifier _blurResultRT2;
         private readonly int _blurResultId2 = Shader.PropertyToID("_BlurVideoTexture2");
-        
-        // 开始拉伸像素以后结果的存储, 同时也是最后存储模糊的结果
-        private RenderTargetIdentifier _extendResultRT;
-        private readonly int _extendResultId = Shader.PropertyToID("_ExtendVideoTexture");
         
         // 开始拉伸像素以后结果的存储, 同时也是最后存储模糊的结果
         private RenderTargetIdentifier _blurResultRT;
@@ -66,28 +62,36 @@ public class CustomRenderPassFeature : ScriptableRendererFeature
             return _mesh;
         }
         
-        public Material edgeStretchMaterial;
         public Material screenMaterial;
         private RenderTargetIdentifier _currentTarget;
 
         // 新增字段用于Mesh对象和其Transform
         private Mesh _targetMesh;
         private Matrix4x4 _targetMeshTransform;
+
+        private Vector2 _backPlaneSize;
+        private Vector3 _backPlanePosition;
+        // private Matrix4x4 _backPlaneWorldToLocal;
         
         // 修改构造函数以接收Mesh对象和其Transform
-        public CustomRenderPass(Material edgeStretchMaterial, Material screenMaterial, Mesh mesh, Matrix4x4 transform, CustomRenderPassFeature owner)
+        public CustomRenderPass(Material screenMaterial, Mesh mesh, Matrix4x4 transform, SpatialVideoRenderPassFeature owner)
         {
             this._owner = owner;
-            this.edgeStretchMaterial = edgeStretchMaterial;
             this.screenMaterial = screenMaterial;
             this._targetMesh = mesh;
             this._targetMeshTransform = transform;
             renderPassEvent = RenderPassEvent.AfterRenderingSkybox;
         }
         
-        public void UpdateTransform(Matrix4x4 newMatrix)
+        public void UpdateTransform(Transform trans, float _backPlaneDistance)
         {
+            var newMatrix = trans.localToWorldMatrix;
             _targetMeshTransform = newMatrix;
+            _backPlaneSize = new Vector2(newMatrix.m00, newMatrix.m11);
+            _backPlanePosition = trans.position + trans.forward * _backPlaneDistance;
+            
+            // trans.Translate(trans.forward * _backPlaneDistance);
+            // _backPlaneWorldToLocal = trans.worldToLocalMatrix;
         }
 
         public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
@@ -96,11 +100,11 @@ public class CustomRenderPassFeature : ScriptableRendererFeature
             RenderTextureDescriptor sourceRTDescriptor = cameraTextureDescriptor;
             sourceRTDescriptor.msaaSamples = 1;
 
-            if (edgeStretchMaterial.mainTexture != null)
+            if (screenMaterial.mainTexture != null)
             {
-                sourceRTDescriptor.width = edgeStretchMaterial.mainTexture.width * 2;
-                sourceRTDescriptor.height = edgeStretchMaterial.mainTexture.height * 2;
-            }
+                sourceRTDescriptor.width = screenMaterial.mainTexture.width;
+                sourceRTDescriptor.height = screenMaterial.mainTexture.height;
+            }                                                                                                                                                       
             else
             {
                 sourceRTDescriptor.width = 1920;
@@ -108,10 +112,6 @@ public class CustomRenderPassFeature : ScriptableRendererFeature
             }
 
             _sourceTextureSize = new Vector2(sourceRTDescriptor.width, sourceRTDescriptor.height);
-            
-            // extend result RT
-            cmd.GetTemporaryRT(_extendResultId, sourceRTDescriptor);
-            _extendResultRT = new RenderTargetIdentifier(_extendResultId);
             
             // blur final pass RT
             cmd.GetTemporaryRT(_blurResultId, sourceRTDescriptor);
@@ -153,15 +153,6 @@ public class CustomRenderPassFeature : ScriptableRendererFeature
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             CommandBuffer cmd = CommandBufferPool.Get("RenderSpatialVideoEffect");
-            // 设置临时RT为目标，并清除
-            cmd.SetRenderTarget(_extendResultRT);
-            cmd.ClearRenderTarget(true, true, Color.clear);
-            
-            // 使用传入的Mesh对象和Transform信息绘制Mesh
-            if ( edgeStretchMaterial != null)
-            {
-                cmd.DrawMesh(GetMesh(), Matrix4x4.identity, edgeStretchMaterial);
-            }
 
             // blur pass
             BlurPass(cmd);
@@ -170,7 +161,9 @@ public class CustomRenderPassFeature : ScriptableRendererFeature
             cmd.SetRenderTarget(_currentTarget);
             if (_targetMesh != null && screenMaterial != null)
             {
-                // screenMaterial.SetTexture("_BlurVideoTexture", persistentRT);
+                screenMaterial.SetVector("_PlaneSize",_backPlaneSize);
+                screenMaterial.SetVector("_PlanePosition", _backPlanePosition);
+                // screenMaterial.SetMatrix("", _backPlaneWorldToLocal);
                 cmd.DrawMesh(_targetMesh, _targetMeshTransform, screenMaterial);
             }
             
@@ -181,8 +174,8 @@ public class CustomRenderPassFeature : ScriptableRendererFeature
         private void BlurPass(CommandBuffer cmd)
         {
             // 1 pass
-            Draw(_extendResultId, _blurResultId0, _sourceTextureSize, 
-                _sourceTextureSize / 2, cmd);
+            Draw(0, _blurResultId0, _sourceTextureSize, 
+                _sourceTextureSize / 2, cmd, true);
             // 2 pass 
             _sourceTextureSize /= 2;
             Draw(_blurResultId0, _blurResultId1, _sourceTextureSize, 
@@ -199,7 +192,7 @@ public class CustomRenderPassFeature : ScriptableRendererFeature
                 _sourceTextureSize / 2, cmd);
         }
         
-        private void Draw(int sourceId, int targetId, Vector2 sourceSize, Vector2 targetSize, CommandBuffer buffer)
+        private void Draw(int sourceId, int targetId, Vector2 sourceSize, Vector2 targetSize, CommandBuffer buffer, bool isOrigin = false)
         {
             // horizon
             int tempId = Shader.PropertyToID("_BlurVideoTextureHorizon");
@@ -207,7 +200,14 @@ public class CustomRenderPassFeature : ScriptableRendererFeature
                 0, FilterMode.Bilinear, GraphicsFormat.R8G8B8A8_UNorm);
             
             buffer.SetRenderTarget(tempId);
-            buffer.SetGlobalTexture("_SourceTexture", sourceId);
+            if (isOrigin)
+            {
+                buffer.SetGlobalTexture("_SourceTexture", screenMaterial.mainTexture);
+            }
+            else
+            {
+                buffer.SetGlobalTexture("_SourceTexture", sourceId);
+            }
             _owner.blurHorizon.SetVector("_SourceTextureSize", new Vector4(sourceSize.x, sourceSize.y, 0f, 0f));
             buffer.DrawMesh(GetMesh(), Matrix4x4.identity, _owner.blurHorizon);
             
@@ -232,11 +232,9 @@ public class CustomRenderPassFeature : ScriptableRendererFeature
             cmd.ReleaseTemporaryRT(_blurResultId1);
             cmd.ReleaseTemporaryRT(_blurResultId2);
             cmd.ReleaseTemporaryRT(_blurResultId);
-            cmd.ReleaseTemporaryRT(_extendResultId);
         }
     }
-
-    public Material edgeStretchMaterial; // 使用的材质
+    
     public Material screenMaterial;
     [NonSerialized]
     public Mesh targetMesh; // 场景中目标Mesh对象
@@ -256,29 +254,26 @@ public class CustomRenderPassFeature : ScriptableRendererFeature
             return;
         }
         // 创建CustomRenderPass时传入Mesh对象和Transform
-        m_ScriptablePass = new CustomRenderPass(edgeStretchMaterial,  screenMaterial, targetMesh, targetMeshTransform.localToWorldMatrix, this);
+        m_ScriptablePass = new CustomRenderPass(screenMaterial, targetMesh, targetMeshTransform.localToWorldMatrix, this);
     }
 
     // Here you can inject one or multiple render passes in the renderer.
     // This method is called when setting up the renderer once per-camera.
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
-        if (edgeStretchMaterial == null || targetMesh == null || screenMaterial == null)
+        if (targetMesh == null || screenMaterial == null)
             return;
-
-        m_ScriptablePass.edgeStretchMaterial = edgeStretchMaterial;
+        
         m_ScriptablePass.screenMaterial = screenMaterial;
         renderer.EnqueuePass(m_ScriptablePass);
     }
     
     // 提供一个方法来更新Transform
-    public void UpdateMeshTransform(Transform transform)
+    public void UpdateMeshTransform(Transform transform, float _backPlaneDistance)
     {
         if (m_ScriptablePass != null)
         {
-            m_ScriptablePass.UpdateTransform(transform.localToWorldMatrix);
+            m_ScriptablePass.UpdateTransform(transform, _backPlaneDistance);
         }
     }
 }
-
-
