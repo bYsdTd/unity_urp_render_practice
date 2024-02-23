@@ -4,7 +4,9 @@ using UnityEngine;
 [RequireComponent(typeof(MeshFilter))]
 public class SpatialVideoRenderFeatureController : MonoBehaviour
 {
+    public Material _screenMaterial;
     public float _backPlaneDistance = 1;
+    public int _Layout = 0;
     
     private SpatialVideoRenderPassFeature renderPassFeature;
     // Start is called before the first frame update
@@ -15,8 +17,10 @@ public class SpatialVideoRenderFeatureController : MonoBehaviour
         {
             return;
         }
-
+        
+        renderPassFeature.screenMaterial = _screenMaterial;
         renderPassFeature.targetMeshTransform = transform;
+        renderPassFeature._layout = _Layout;
         renderPassFeature.targetMesh = GetComponent<MeshFilter>().mesh;
     }
 

@@ -32,6 +32,7 @@ Shader "Custom/SpatialVideoScreen"
             struct v2f
             {
                 float2 uv : TEXCOORD0;
+                float2 blurUV : TEXCOORD1;
                 float4 vertex : SV_POSITION;
             };
 
@@ -103,7 +104,8 @@ Shader "Custom/SpatialVideoScreen"
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.uv = ComputeUV2(v);
-
+                o.blurUV = o.uv;
+                
                 if (_Layout == 1)
                 {
                     o.uv.x = o.uv.x * 0.5 + step(0.5, unity_StereoEyeIndex) * 0.5;
@@ -120,19 +122,24 @@ Shader "Custom/SpatialVideoScreen"
             fixed4 frag (v2f i) : SV_Target
             {
                 float2 uv = i.uv;
+                float2 blurUV = i.blurUV;
+                
                 // 中心保持区域的UV范围
                 float2 minUV = float2(0, 0);
                 float2 maxUV = float2(1, 1);
 
                 // 如果在中心保持区域内，直接映射UV到原图
-                if (uv.x >= minUV.x && uv.x <= maxUV.x && uv.y >= minUV.y && uv.y <= maxUV.y)
+                // blurUV才是单目的0-1的uv,用它来判断区域
+                if (blurUV.x >= minUV.x && blurUV.x <= maxUV.x && blurUV.y >= minUV.y && blurUV.y <= maxUV.y)
                 {
-                    float2 remappedUV = (uv - minUV) / (maxUV - minUV);
+                    float2 remappedUV = (blurUV - minUV) / (maxUV - minUV);
 
                     // 用贴图混合
                     float lerp = tex2D(_MaskTex, remappedUV).r;
-                    float4 col = tex2D(_MainTex, remappedUV);
                     float4 blur = tex2D(_BlurVideoTexture, remappedUV);
+                    // 屏幕uv用考虑双目重新计算过的uv
+                    float4 col = tex2D(_MainTex, uv);
+                    
                     col = blur * lerp + col * (1-lerp);
                     return col;
                 }
@@ -140,7 +147,7 @@ Shader "Custom/SpatialVideoScreen"
                 {
                     // 计算UV到中心保持区域边缘的方向
                     float2 center = (minUV + maxUV) * 0.5;
-                    float2 dir = normalize(uv - center);
+                    float2 dir = normalize(blurUV - center);
                     
                     // 估算边缘UV值
                     float2 edgeUV;

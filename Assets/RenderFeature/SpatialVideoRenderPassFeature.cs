@@ -59,8 +59,9 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
         }
         
         public Material screenMaterial;
+        public int _Layout = 1;
         private RenderTargetIdentifier _currentTarget;
-
+        
         // 新增字段用于Mesh对象和其Transform
         private Mesh _targetMesh;
         private Matrix4x4 _targetMeshTransform;
@@ -68,7 +69,7 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
         private Vector2 _backPlaneSize;
         private Vector3 _backPlanePosition;
         private Vector3 _backPlaneNormal;
-        private int _Layout = 1;
+        
         
         private Matrix4x4 _backPlaneWorldToLocal;
         
@@ -117,7 +118,15 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
 
             // TODO： 这里处理2D，3DLR，3DTB
             // 目前考虑是3D，LR的情况
-            sourceRTDescriptor.width /= 2;
+            if (_Layout == 1)
+            {
+                sourceRTDescriptor.width /= 2;
+            }
+            else if (_Layout == 2)
+            {
+                sourceRTDescriptor.height /= 2;
+            }
+            
             _sourceTextureSize = new Vector2(sourceRTDescriptor.width, sourceRTDescriptor.height);
             
             
@@ -213,6 +222,7 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
             if (isOrigin)
             {
                 buffer.SetGlobalTexture("_SourceTexture", screenMaterial.mainTexture);
+                _owner.blurHorizonOrigin.SetInt("_Layout", _Layout);
                 buffer.DrawMesh(GetMesh(), Matrix4x4.identity, _owner.blurHorizonOrigin);
             }
             else
@@ -245,12 +255,15 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
         }
     }
     
+    [NonSerialized]
     public Material screenMaterial;
     [NonSerialized]
     public Mesh targetMesh; // 场景中目标Mesh对象
     [NonSerialized]
     public Transform targetMeshTransform; // 目标Mesh的Transform
 
+    [NonSerialized] public int _layout;
+    
     public Material blurHorizonOrigin;
     public Material blurHorizon;
     public Material blurVertical;
@@ -267,6 +280,7 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
         }
         // 创建CustomRenderPass时传入Mesh对象和Transform
         m_ScriptablePass = new CustomRenderPass(screenMaterial, targetMesh, targetMeshTransform.localToWorldMatrix, this);
+        m_ScriptablePass._Layout = _layout;
     }
 
     // Here you can inject one or multiple render passes in the renderer.
