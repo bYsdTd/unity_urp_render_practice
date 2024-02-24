@@ -103,8 +103,8 @@ public class CustomRenderPassFeature : ScriptableRendererFeature
             }
             else
             {
-                sourceRTDescriptor.width = 1920;
-                sourceRTDescriptor.height = 1080;
+                sourceRTDescriptor.width = 999;
+                sourceRTDescriptor.height = 666;
             }
 
             _sourceTextureSize = new Vector2(sourceRTDescriptor.width, sourceRTDescriptor.height);

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
@@ -9,10 +10,12 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
 {
     // 单例实例
     public static SpatialVideoRenderPassFeature Instance { get; private set; }
-    class CustomRenderPass : ScriptableRenderPass
+
+    public class SpatialVideoRenderPass : ScriptableRenderPass
     {
         private SpatialVideoRenderPassFeature _owner;
         
+        private readonly int _blurVideoHorizonId = Shader.PropertyToID("_BlurVideoTextureHorizon");
         // 渲染模糊的结果RT
         private RenderTargetIdentifier _blurResultRT0;
         private readonly int _blurResultId0 = Shader.PropertyToID("_BlurVideoTexture0");
@@ -58,14 +61,15 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
             return _mesh;
         }
         
+        // 新增字段用于外部传入参数
+        public Mesh _targetMesh;
+        public Matrix4x4 _targetMeshTransform;
+        public int key;
         public Material screenMaterial;
         public int _Layout = 1;
-        private RenderTargetIdentifier _currentTarget;
+        public RenderTexture _blurTexture;
         
-        // 新增字段用于Mesh对象和其Transform
-        private Mesh _targetMesh;
-        private Matrix4x4 _targetMeshTransform;
-
+        private RenderTargetIdentifier _currentTarget;
         private Vector2 _backPlaneSize;
         private Vector3 _backPlanePosition;
         private Vector3 _backPlaneNormal;
@@ -74,12 +78,9 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
         private Matrix4x4 _backPlaneWorldToLocal;
         
         // 修改构造函数以接收Mesh对象和其Transform
-        public CustomRenderPass(Material screenMaterial, Mesh mesh, Matrix4x4 transform, SpatialVideoRenderPassFeature owner)
+        public SpatialVideoRenderPass(SpatialVideoRenderPassFeature owner)
         {
             this._owner = owner;
-            this.screenMaterial = screenMaterial;
-            this._targetMesh = mesh;
-            this._targetMeshTransform = transform;
             renderPassEvent = RenderPassEvent.AfterRenderingSkybox;
         }
         
@@ -112,8 +113,8 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
             }                                                                                                                                                       
             else
             {
-                sourceRTDescriptor.width = 1920;
-                sourceRTDescriptor.height = 1080;
+                sourceRTDescriptor.width = 1;
+                sourceRTDescriptor.height = 1;
             }
 
             // TODO： 这里处理2D，3DLR，3DTB
@@ -169,20 +170,23 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
         // You don't have to call ScriptableRenderContext.submit, the render pipeline will call it at specific points in the pipeline.
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
-            CommandBuffer cmd = CommandBufferPool.Get("RenderSpatialVideoEffect");
+            CommandBuffer cmd = CommandBufferPool.Get($"RenderSpatialVideoEffect{key}");
 
             // blur pass
             BlurPass(cmd);
             
             // 渲染到屏幕
             cmd.SetRenderTarget(_currentTarget);
+            
             if (_targetMesh != null && screenMaterial != null)
             {
-                screenMaterial.SetVector("_PlaneSize",_backPlaneSize);
-                screenMaterial.SetVector("_PlanePosition", _backPlanePosition);
-                screenMaterial.SetMatrix("_PlaneWorldToLocalMatrix", _backPlaneWorldToLocal);
-                screenMaterial.SetVector("_PlaneNormal", _backPlaneNormal);
-                cmd.DrawMesh(_targetMesh, _targetMeshTransform, screenMaterial);
+                MaterialPropertyBlock props = new MaterialPropertyBlock();
+                props.SetVector("_PlaneSize",_backPlaneSize);
+                props.SetVector("_PlanePosition", _backPlanePosition);
+                props.SetMatrix("_PlaneWorldToLocalMatrix", _backPlaneWorldToLocal);
+                props.SetVector("_PlaneNormal", _backPlaneNormal);
+                cmd.SetGlobalTexture("_BlurVideoTexture", _blurResultId);
+                cmd.DrawMesh(_targetMesh, _targetMeshTransform, screenMaterial, 0, -1, props);
             }
             
             context.ExecuteCommandBuffer(cmd);
@@ -213,17 +217,18 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
         private void Draw(int sourceId, int targetId, Vector2 sourceSize, Vector2 targetSize, CommandBuffer buffer, bool isOrigin = false)
         {
             // horizon
-            int tempId = Shader.PropertyToID("_BlurVideoTextureHorizon");
-                buffer.GetTemporaryRT(tempId, (int)targetSize.x, (int)targetSize.y,
-                0, FilterMode.Bilinear, GraphicsFormat.R8G8B8A8_UNorm);
+            buffer.GetTemporaryRT(_blurVideoHorizonId, (int)targetSize.x, (int)targetSize.y,
+            0, FilterMode.Bilinear, GraphicsFormat.R8G8B8A8_UNorm);
             
-            buffer.SetRenderTarget(tempId);
+            buffer.SetRenderTarget(_blurVideoHorizonId);
             _owner.blurHorizon.SetVector("_SourceTextureSize", new Vector4(sourceSize.x, sourceSize.y, 0f, 0f));
             if (isOrigin)
             {
                 buffer.SetGlobalTexture("_SourceTexture", screenMaterial.mainTexture);
-                _owner.blurHorizonOrigin.SetInt("_Layout", _Layout);
-                buffer.DrawMesh(GetMesh(), Matrix4x4.identity, _owner.blurHorizonOrigin);
+                MaterialPropertyBlock props = new MaterialPropertyBlock();
+                props.SetInt("_Layout", _Layout);
+                // _owner.blurHorizonOrigin.SetInt("_Layout", _Layout);
+                buffer.DrawMesh(GetMesh(), Matrix4x4.identity, _owner.blurHorizonOrigin, 0, -1, props);
             }
             else
             {
@@ -233,11 +238,11 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
             
             // vertical
             buffer.SetRenderTarget(targetId);
-            buffer.SetGlobalTexture("_SourceTexture", tempId);
+            buffer.SetGlobalTexture("_SourceTexture", _blurVideoHorizonId);
             _owner.blurVertical.SetVector("_SourceTextureSize", new Vector4(targetSize.x, targetSize.y, 0f, 0f));
             buffer.DrawMesh(GetMesh(), Matrix4x4.identity, _owner.blurVertical);
             
-            buffer.ReleaseTemporaryRT(tempId);
+            buffer.ReleaseTemporaryRT(_blurVideoHorizonId);
         }
         
         // Cleanup any allocated resources that were created during the execution of this render pass.
@@ -255,51 +260,46 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
         }
     }
     
-    [NonSerialized]
-    public Material screenMaterial;
-    [NonSerialized]
-    public Mesh targetMesh; // 场景中目标Mesh对象
-    [NonSerialized]
-    public Transform targetMeshTransform; // 目标Mesh的Transform
-
-    [NonSerialized] public int _layout;
-    
     public Material blurHorizonOrigin;
     public Material blurHorizon;
     public Material blurVertical;
-
-    private CustomRenderPass m_ScriptablePass;
+    
+    private Dictionary<int, SpatialVideoRenderPass> _renderPasses = new Dictionary<int, SpatialVideoRenderPass>();
     
     /// <inheritdoc/>
     public override void Create()
     {
         Instance = this;
-        if (targetMeshTransform == null)
-        {
-            return;
-        }
-        // 创建CustomRenderPass时传入Mesh对象和Transform
-        m_ScriptablePass = new CustomRenderPass(screenMaterial, targetMesh, targetMeshTransform.localToWorldMatrix, this);
-        m_ScriptablePass._Layout = _layout;
     }
 
     // Here you can inject one or multiple render passes in the renderer.
     // This method is called when setting up the renderer once per-camera.
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
-        if (targetMesh == null || screenMaterial == null)
-            return;
-        
-        m_ScriptablePass.screenMaterial = screenMaterial;
-        renderer.EnqueuePass(m_ScriptablePass);
-    }
-    
-    // 提供一个方法来更新Transform
-    public void UpdateMeshTransform(Transform transform, float _backPlaneDistance)
-    {
-        if (m_ScriptablePass != null)
+        foreach (var renderPass in _renderPasses)
         {
-            m_ScriptablePass.UpdateTransform(transform, _backPlaneDistance);
+            renderer.EnqueuePass(renderPass.Value);    
+        }
+    }
+
+    public SpatialVideoRenderPass AddSpatialVideoRenderPass(int hashCode)
+    {
+        if (_renderPasses.TryGetValue(hashCode, out var pass))
+        {
+            return pass;
+        }
+
+        SpatialVideoRenderPass renderPass = new SpatialVideoRenderPass(this);
+        renderPass.key = hashCode;
+        _renderPasses.Add(hashCode, renderPass);
+        return renderPass;
+    }
+
+    public void RemoveSpatialVideoRenderPass(int hashCode)
+    {
+        if (_renderPasses.ContainsKey(hashCode))
+        {
+            _renderPasses.Remove(hashCode);
         }
     }
 }

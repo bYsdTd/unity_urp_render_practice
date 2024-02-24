@@ -24,7 +24,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: dd631777c9ea75b499770c6f7721478b, type: 3}
+        m_Texture: {fileID: 2800000, guid: 48889c1af91d74516be81ad102b85469, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MaskTex:
@@ -42,7 +42,7 @@ Material:
     - _PlaneHeight: 2
     - _PlaneWidth: 2.8158922
     m_Colors:
-    - _PlanePosition: {r: 0, g: 0, b: 1, a: 0}
+    - _PlanePosition: {r: 6.8918157, g: 0, b: 0.7407179, a: 0}
     - _PlaneRotation: {r: 0.13087413, g: 298.77017, b: 0.03347252, a: 0}
-    - _PlaneSize: {r: 4, g: 2, b: 0, a: 0}
+    - _PlaneSize: {r: 2.962873, g: 2, b: 0, a: 0}
   m_BuildTextureStacks: []

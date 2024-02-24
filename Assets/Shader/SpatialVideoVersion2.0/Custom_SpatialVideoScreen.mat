@@ -42,7 +42,7 @@ Material:
     - _PlaneHeight: 2
     - _PlaneWidth: 2.8158922
     m_Colors:
-    - _PlanePosition: {r: 0, g: 0, b: 1, a: 0}
+    - _PlanePosition: {r: -0.5805227, g: 0, b: 0.81424403, a: 0}
     - _PlaneRotation: {r: 0.13087413, g: 298.77017, b: 0.03347252, a: 0}
-    - _PlaneSize: {r: 4, g: 2, b: 0, a: 0}
+    - _PlaneSize: {r: 3.2569761, g: 2, b: 0, a: 0}
   m_BuildTextureStacks: []

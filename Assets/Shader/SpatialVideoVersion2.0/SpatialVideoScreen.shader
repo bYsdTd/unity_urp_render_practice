@@ -39,7 +39,6 @@ Shader "Custom/SpatialVideoScreen"
             sampler2D _MainTex;
             float4 _MainTex_ST;
             sampler2D _BlurVideoTexture;
-            sampler2D _ExtendVideoTexture;
             sampler2D _MaskTex;
             
             float2 _PlaneSize;
@@ -47,7 +46,8 @@ Shader "Custom/SpatialVideoScreen"
             float3 _PlaneNormal;
             int _Layout; // 0 2d; 1 LR; 2 TB
             float4x4 _PlaneWorldToLocalMatrix;
-            
+
+            // 不考虑旋转
             float2 ComputeUV(appdata v)
             {
                 // 获取摄像机位置和前平面顶点的世界空间位置
@@ -65,6 +65,7 @@ Shader "Custom/SpatialVideoScreen"
                 return  (hitPoint.xy - _PlanePosition.xy) / _PlaneSize + 0.5;
             }
 
+            // 考虑旋转的版本
             float2 ComputeUV2(appdata v)
             {
                 // _PlaneNormal = float3(0,0,1);

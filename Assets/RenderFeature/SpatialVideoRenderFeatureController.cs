@@ -1,4 +1,5 @@
 
+using System;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter))]
@@ -8,29 +9,44 @@ public class SpatialVideoRenderFeatureController : MonoBehaviour
     public float _backPlaneDistance = 1;
     public int _Layout = 0;
     
-    private SpatialVideoRenderPassFeature renderPassFeature;
-    // Start is called before the first frame update
-    private void Start()
-    {
-        renderPassFeature = SpatialVideoRenderPassFeature.Instance;
-        if (renderPassFeature == null)
-        {
-            return;
-        }
-        
-        renderPassFeature.screenMaterial = _screenMaterial;
-        renderPassFeature.targetMeshTransform = transform;
-        renderPassFeature._layout = _Layout;
-        renderPassFeature.targetMesh = GetComponent<MeshFilter>().mesh;
-    }
-
+    private SpatialVideoRenderPassFeature _renderPassFeature;
+    private SpatialVideoRenderPassFeature.SpatialVideoRenderPass _renderPass;
     private void Update()
     {
-        renderPassFeature = SpatialVideoRenderPassFeature.Instance;
-        if (renderPassFeature == null)
+        if (_renderPass == null)
         {
             return;
         }
-        renderPassFeature.UpdateMeshTransform(transform, _backPlaneDistance);
+        _renderPass.UpdateTransform(transform, _backPlaneDistance);
+    }
+
+    private void OnEnable()
+    {
+        _renderPassFeature = SpatialVideoRenderPassFeature.Instance;
+        if (_renderPassFeature == null)
+        {
+            return;
+        }
+        int key = GetHashCode();
+        _renderPass = _renderPassFeature.AddSpatialVideoRenderPass(key);
+        if (_renderPass == null)
+        {
+            return;
+        }
+        _renderPass.screenMaterial = _screenMaterial;
+        _renderPass.UpdateTransform(transform, _backPlaneDistance);
+        _renderPass._Layout = _Layout;
+        _renderPass._targetMesh = GetComponent<MeshFilter>().mesh;
+    }
+
+    private void OnDisable()
+    {
+        _renderPassFeature = SpatialVideoRenderPassFeature.Instance;
+        if (_renderPassFeature == null)
+        {
+            return;
+        }
+        int key = GetHashCode();
+        _renderPassFeature.RemoveSpatialVideoRenderPass(key);
     }
 }
