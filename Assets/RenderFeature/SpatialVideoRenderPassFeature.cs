@@ -189,6 +189,11 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
                 cmd.DrawMesh(_targetMesh, _targetMeshTransform, screenMaterial, 0, -1, props);
             }
             
+            cmd.ReleaseTemporaryRT(_blurResultId0);
+            cmd.ReleaseTemporaryRT(_blurResultId1);
+            cmd.ReleaseTemporaryRT(_blurResultId2);
+            cmd.ReleaseTemporaryRT(_blurResultId);
+            
             context.ExecuteCommandBuffer(cmd);
             CommandBufferPool.Release(cmd);
         }
@@ -228,12 +233,14 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
                 MaterialPropertyBlock props = new MaterialPropertyBlock();
                 props.SetInt("_Layout", _Layout);
                 // _owner.blurHorizonOrigin.SetInt("_Layout", _Layout);
-                buffer.DrawMesh(GetMesh(), Matrix4x4.identity, _owner.blurHorizonOrigin, 0, -1, props);
+                buffer.DrawMesh(GetMesh(), Matrix4x4.identity, _owner.blurHorizon, 0, -1, props);
             }
             else
             {
                 buffer.SetGlobalTexture("_SourceTexture", sourceId);
-                buffer.DrawMesh(GetMesh(), Matrix4x4.identity, _owner.blurHorizon);
+                MaterialPropertyBlock props = new MaterialPropertyBlock();
+                props.SetInt("_Layout", 0);
+                buffer.DrawMesh(GetMesh(), Matrix4x4.identity, _owner.blurHorizon, 0, -1, props);
             }
             
             // vertical
@@ -253,14 +260,10 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
 
         public override void FrameCleanup(CommandBuffer cmd)
         {
-            cmd.ReleaseTemporaryRT(_blurResultId0);
-            cmd.ReleaseTemporaryRT(_blurResultId1);
-            cmd.ReleaseTemporaryRT(_blurResultId2);
-            cmd.ReleaseTemporaryRT(_blurResultId);
+
         }
     }
     
-    public Material blurHorizonOrigin;
     public Material blurHorizon;
     public Material blurVertical;
     
