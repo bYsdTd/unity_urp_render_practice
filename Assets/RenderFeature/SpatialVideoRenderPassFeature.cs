@@ -185,10 +185,10 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
             if (_targetMesh != null && screenMaterial != null)
             {
                 MaterialPropertyBlock props = new MaterialPropertyBlock();
-                props.SetVector("_PlaneSize",_backPlaneSize);
-                props.SetVector("_PlanePosition", _backPlanePosition);
-                props.SetMatrix("_PlaneWorldToLocalMatrix", _backPlaneWorldToLocal);
-                props.SetVector("_PlaneNormal", _backPlaneNormal);
+                props.SetVector(PlaneSize,_backPlaneSize);
+                props.SetVector(PlanePosition, _backPlanePosition);
+                props.SetMatrix(PlaneWorldToLocalMatrix, _backPlaneWorldToLocal);
+                props.SetVector(PlaneNormal, _backPlaneNormal);
                 cmd.SetGlobalTexture("_BlurVideoTexture", _blurResultId);
                 cmd.DrawMesh(_targetMesh, _targetMeshTransform, screenMaterial, 0, -1, props);
             }
@@ -230,12 +230,12 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
             0, FilterMode.Bilinear, GraphicsFormat.R8G8B8A8_UNorm);
             
             buffer.SetRenderTarget(_blurVideoHorizonId);
-            _owner.blurHorizon.SetVector("_SourceTextureSize", new Vector4(sourceSize.x, sourceSize.y, 0f, 0f));
+            _owner.blurHorizon.SetVector(SourceTextureSize, new Vector4(sourceSize.x, sourceSize.y, 0f, 0f));
             if (isOrigin)
             {
                 buffer.SetGlobalTexture("_SourceTexture", screenMaterial.mainTexture);
                 MaterialPropertyBlock props = new MaterialPropertyBlock();
-                props.SetInt("_Layout", _Layout);
+                props.SetInt(Layout, _Layout);
                 // _owner.blurHorizonOrigin.SetInt("_Layout", _Layout);
                 buffer.DrawMesh(GetMesh(), Matrix4x4.identity, _owner.blurHorizon, 0, -1, props);
             }
@@ -243,14 +243,14 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
             {
                 buffer.SetGlobalTexture("_SourceTexture", sourceId);
                 MaterialPropertyBlock props = new MaterialPropertyBlock();
-                props.SetInt("_Layout", 0);
+                props.SetInt(Layout, 0);
                 buffer.DrawMesh(GetMesh(), Matrix4x4.identity, _owner.blurHorizon, 0, -1, props);
             }
             
             // vertical
             buffer.SetRenderTarget(targetId);
             buffer.SetGlobalTexture("_SourceTexture", _blurVideoHorizonId);
-            _owner.blurVertical.SetVector("_SourceTextureSize", new Vector4(targetSize.x, targetSize.y, 0f, 0f));
+            _owner.blurVertical.SetVector(SourceTextureSize, new Vector4(targetSize.x, targetSize.y, 0f, 0f));
             buffer.DrawMesh(GetMesh(), Matrix4x4.identity, _owner.blurVertical);
             
             buffer.ReleaseTemporaryRT(_blurVideoHorizonId);
@@ -272,7 +272,13 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
     public Material blurVertical;
     
     private Dictionary<int, SpatialVideoRenderPass> _renderPasses = new Dictionary<int, SpatialVideoRenderPass>();
-    
+    private static readonly int SourceTextureSize = Shader.PropertyToID("_SourceTextureSize");
+    private static readonly int Layout = Shader.PropertyToID("_Layout");
+    private static readonly int PlaneSize = Shader.PropertyToID("_PlaneSize");
+    private static readonly int PlanePosition = Shader.PropertyToID("_PlanePosition");
+    private static readonly int PlaneWorldToLocalMatrix = Shader.PropertyToID("_PlaneWorldToLocalMatrix");
+    private static readonly int PlaneNormal = Shader.PropertyToID("_PlaneNormal");
+
     /// <inheritdoc/>
     public override void Create()
     {

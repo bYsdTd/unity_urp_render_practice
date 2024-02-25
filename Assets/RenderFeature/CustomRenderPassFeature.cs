@@ -143,7 +143,7 @@ public class CustomRenderPassFeature : ScriptableRendererFeature
         // The render pipeline will ensure target setup and clearing happens in a performant manner.
         public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
         {
-            _currentTarget = renderingData.cameraData.renderer.cameraColorTarget;
+            _currentTarget = renderingData.cameraData.renderer.cameraColorTargetHandle;
         }
 
         // Here you can implement the rendering logic.
