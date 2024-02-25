@@ -70,6 +70,8 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
         public RenderTexture _blurTexture;
         
         private RenderTargetIdentifier _currentTarget;
+        private RenderTargetIdentifier _currentDepth;
+        
         private Vector2 _backPlaneSize;
         private Vector3 _backPlanePosition;
         private Vector3 _backPlaneNormal;
@@ -81,7 +83,7 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
         public SpatialVideoRenderPass(SpatialVideoRenderPassFeature owner)
         {
             this._owner = owner;
-            renderPassEvent = RenderPassEvent.AfterRenderingSkybox;
+            renderPassEvent = RenderPassEvent.AfterRenderingOpaques;
         }
         
         public void UpdateTransform(Transform trans, float _backPlaneDistance)
@@ -162,6 +164,7 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
         public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
         {
             _currentTarget = renderingData.cameraData.renderer.cameraColorTarget;
+            _currentDepth = renderingData.cameraData.renderer.cameraDepthTarget;
         }
 
         // Here you can implement the rendering logic.
@@ -170,13 +173,14 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
         // You don't have to call ScriptableRenderContext.submit, the render pipeline will call it at specific points in the pipeline.
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
-            CommandBuffer cmd = CommandBufferPool.Get($"RenderSpatialVideoEffect{key}");
+            CommandBuffer cmd = CommandBufferPool.Get($"RenderSpatialVideoEffect-{key}");
 
             // blur pass
             BlurPass(cmd);
             
             // 渲染到屏幕
-            cmd.SetRenderTarget(_currentTarget);
+            // 设置深度测试和写入状态
+            cmd.SetRenderTarget(_currentTarget, _currentDepth);
             
             if (_targetMesh != null && screenMaterial != null)
             {

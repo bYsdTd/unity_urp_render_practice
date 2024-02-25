@@ -13,7 +13,8 @@ Shader "Custom/SpatialVideoScreen"
         Tags { "RenderType"="Opaque" "Queue"="Geometry"}
         
         LOD 100
-        ZWrite On
+        ZWrite On // 开启深度写入
+        ZTest LEqual // 设置深度测试为小于等于
         
         Pass
         {
