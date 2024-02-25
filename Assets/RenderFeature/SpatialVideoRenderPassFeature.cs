@@ -163,8 +163,8 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
         // The render pipeline will ensure target setup and clearing happens in a performant manner.
         public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
         {
-            _currentTarget = renderingData.cameraData.renderer.cameraColorTarget;
-            _currentDepth = renderingData.cameraData.renderer.cameraDepthTarget;
+            _currentTarget = renderingData.cameraData.renderer.cameraColorTargetHandle;
+            _currentDepth = renderingData.cameraData.renderer.cameraDepthTargetHandle;
         }
 
         // Here you can implement the rendering logic.
