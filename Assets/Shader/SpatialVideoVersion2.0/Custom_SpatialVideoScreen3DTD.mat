@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Custom_SpatialVideoScreen2D
+  m_Name: Custom_SpatialVideoScreen3DTD
   m_Shader: {fileID: 4800000, guid: 35ee027af2cdee8429e1d321d87d39f3, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -24,7 +24,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _MainTex:
-        m_Texture: {fileID: 8400000, guid: ccef48559e829483c913039524acc0af, type: 2}
+        m_Texture: {fileID: 8400000, guid: 9a38a02de30dc4e81bd18d2816e52ec3, type: 2}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MaskTex:
@@ -37,12 +37,12 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Layout: 0
+    - _Layout: 2
     - _PlaneDistance: 1
     - _PlaneHeight: 2
     - _PlaneWidth: 2.8158922
     m_Colors:
-    - _PlanePosition: {r: 6.8918157, g: 0, b: 0.7407179, a: 0}
+    - _PlanePosition: {r: -0.5805227, g: 0, b: 0.81424403, a: 0}
     - _PlaneRotation: {r: 0.13087413, g: 298.77017, b: 0.03347252, a: 0}
-    - _PlaneSize: {r: 2.962873, g: 2, b: 0, a: 0}
+    - _PlaneSize: {r: 3.2569761, g: 2, b: 0, a: 0}
   m_BuildTextureStacks: []
