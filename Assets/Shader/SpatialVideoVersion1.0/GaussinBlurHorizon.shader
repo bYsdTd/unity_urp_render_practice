@@ -11,8 +11,9 @@ Shader "Wangsd/GaussinBlurHorizon"
         Tags { "RenderType"="Opaque" }
         LOD 100
 
-        Pass
+        Pass 
         {
+            Name "GaussinBlurHorizon"
             ZTest Off
             Cull Off
             

@@ -13,6 +13,7 @@ Shader "Wangsd/GaussinBlurVertical"
 
         Pass
         {
+            Name "GaussinBlurVertical"
             ZTest Off
             Cull Off
             
