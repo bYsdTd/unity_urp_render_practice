@@ -110,5 +110,5 @@ MonoBehaviour:
   m_Name: SpatialVideoRenderPassFeature
   m_EditorClassIdentifier: 
   m_Active: 1
-  blurHorizon: {fileID: 2100000, guid: aea00bac4d2f39246bd2a05a26ce9cd3, type: 2}
-  blurVertical: {fileID: 2100000, guid: 1ccaa23540791ca4cb50586d1aa62075, type: 2}
+  blurHorizon: {fileID: 2100000, guid: 0e4ec4be5533ac74994d01e71e9c95ca, type: 2}
+  blurVertical: {fileID: 2100000, guid: e2ccc888e1767a540a405781acbc25e1, type: 2}

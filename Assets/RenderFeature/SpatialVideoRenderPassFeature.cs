@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
@@ -19,10 +20,10 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
         // 渲染模糊的结果RT
         private RenderTargetIdentifier _blurResultRT0;
         private readonly int _blurResultId0 = Shader.PropertyToID("_BlurVideoTexture0");
-        private RenderTargetIdentifier _blurResultRT1;
-        private readonly int _blurResultId1 = Shader.PropertyToID("_BlurVideoTexture1");
-        private RenderTargetIdentifier _blurResultRT2;
-        private readonly int _blurResultId2 = Shader.PropertyToID("_BlurVideoTexture2");
+        // private RenderTargetIdentifier _blurResultRT1;
+        // private readonly int _blurResultId1 = Shader.PropertyToID("_BlurVideoTexture1");
+        // private RenderTargetIdentifier _blurResultRT2;
+        // private readonly int _blurResultId2 = Shader.PropertyToID("_BlurVideoTexture2");
         
         // 开始拉伸像素以后结果的存储, 同时也是最后存储模糊的结果
         private RenderTargetIdentifier _blurResultRT;
@@ -96,8 +97,16 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
             
             // 使用原始的旋转和缩放，因为我们只改变位置
             Quaternion _backPlaneRotation = trans.rotation;
-            Vector3 _backPlaneScale = trans.localScale;
-
+            
+            Debug.Log($"Camera.main.fieldOfView:  {Camera.main.fieldOfView} distance {_backPlaneDistance}");
+            // 根据相似三角形，后平面的大小与前平面成比例
+            // float halffov = Camera.main.fieldOfView * 0.5f;
+            // float d1 = trans.localScale.y * 0.5f / Mathf.Tan(Mathf.Deg2Rad * halffov);
+            float d1 = (Camera.main.transform.position - trans.position).magnitude;
+            float d2 = d1 + _backPlaneDistance;
+            
+            Vector3 _backPlaneScale = trans.localScale * d2 / d1;
+            
             // 构造新的世界空间到局部空间的变换矩阵
             _backPlaneWorldToLocal = Matrix4x4.TRS(_backPlanePosition, _backPlaneRotation, _backPlaneScale).inverse;
         }
@@ -141,14 +150,14 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
             // blur pass 2 RT
             sourceRTDescriptor.width /= 2;
             sourceRTDescriptor.height /= 2;
-            cmd.GetTemporaryRT(_blurResultId1, sourceRTDescriptor);
-            _blurResultRT1 = new RenderTargetIdentifier(_blurResultId1);
+            // cmd.GetTemporaryRT(_blurResultId1, sourceRTDescriptor);
+            // _blurResultRT1 = new RenderTargetIdentifier(_blurResultId1);
             
             // blur pass 3 RT
             sourceRTDescriptor.width /= 2;
             sourceRTDescriptor.height /= 2;
-            cmd.GetTemporaryRT(_blurResultId2, sourceRTDescriptor);
-            _blurResultRT2 = new RenderTargetIdentifier(_blurResultId2);
+            // cmd.GetTemporaryRT(_blurResultId2, sourceRTDescriptor);
+            // _blurResultRT2 = new RenderTargetIdentifier(_blurResultId2);
             
             // blur final pass RT
             sourceRTDescriptor.width /= 2;
@@ -208,17 +217,17 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
                 _sourceTextureSize / 2, cmd, true);
             // 2 pass 
             _sourceTextureSize /= 2;
-            Draw(_blurResultId0, _blurResultId1, _sourceTextureSize, 
-                _sourceTextureSize / 2, cmd);
-            
+            // Draw(_blurResultId0, _blurResultId1, _sourceTextureSize, 
+            //     _sourceTextureSize / 2, cmd);
+            //
             // 3 pass 
             _sourceTextureSize /= 2;
-            Draw(_blurResultId1, _blurResultId2, _sourceTextureSize, 
-                _sourceTextureSize / 2, cmd);
+            // Draw(_blurResultId1, _blurResultId2, _sourceTextureSize, 
+            //     _sourceTextureSize / 2, cmd);
             
             // 4 pass 
             _sourceTextureSize /= 2;
-            Draw(_blurResultId2, _blurResultId, _sourceTextureSize, 
+            Draw(_blurResultId0, _blurResultId, _sourceTextureSize, 
                 _sourceTextureSize / 2, cmd);
         }
         
@@ -232,7 +241,7 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
             _owner.blurHorizon.SetVector(SourceTextureSize, new Vector4(sourceSize.x, sourceSize.y, 0f, 0f));
             if (isOrigin)
             {
-                buffer.SetGlobalTexture("_SourceTexture", screenMaterial.mainTexture);
+                buffer.SetGlobalTexture("_SourceTextureHorizon", screenMaterial.mainTexture);
                 MaterialPropertyBlock props = new MaterialPropertyBlock();
                 props.SetInt(Layout, _Layout);
                 // _owner.blurHorizonOrigin.SetInt("_Layout", _Layout);
@@ -240,7 +249,7 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
             }
             else
             {
-                buffer.SetGlobalTexture("_SourceTexture", sourceId);
+                buffer.SetGlobalTexture("_SourceTextureHorizon", sourceId);
                 MaterialPropertyBlock props = new MaterialPropertyBlock();
                 props.SetInt(Layout, 0);
                 buffer.DrawMesh(GetMesh(), Matrix4x4.identity, _owner.blurHorizon, 0, -1, props);
@@ -248,7 +257,7 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
             
             // vertical
             buffer.SetRenderTarget(targetId);
-            buffer.SetGlobalTexture("_SourceTexture", _blurVideoHorizonId);
+            buffer.SetGlobalTexture("_SourceTextureVertical", _blurVideoHorizonId);
             _owner.blurVertical.SetVector(SourceTextureSize, new Vector4(targetSize.x, targetSize.y, 0f, 0f));
             buffer.DrawMesh(GetMesh(), Matrix4x4.identity, _owner.blurVertical);
             
@@ -258,8 +267,8 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
         public override void FrameCleanup(CommandBuffer cmd)
         {
             cmd.ReleaseTemporaryRT(_blurResultId0);
-            cmd.ReleaseTemporaryRT(_blurResultId1);
-            cmd.ReleaseTemporaryRT(_blurResultId2);
+            // cmd.ReleaseTemporaryRT(_blurResultId1);
+            // cmd.ReleaseTemporaryRT(_blurResultId2);
             cmd.ReleaseTemporaryRT(_blurResultId);
             base.FrameCleanup(cmd);
         }

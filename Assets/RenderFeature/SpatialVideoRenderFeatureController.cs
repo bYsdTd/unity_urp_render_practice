@@ -16,16 +16,16 @@ public class SpatialVideoRenderFeatureController : MonoBehaviour
 
     private void Awake()
     {
-        // PXR_MixedReality.EnableVideoSeeThrough(true);
+        PXR_MixedReality.EnableVideoSeeThrough(true);
     }
 
     // 应用恢复后，再次开启透视
     void OnApplicationPause(bool pause)
     {
-        // if (!pause)
-        // {
-        //     PXR_MixedReality.EnableVideoSeeThrough(true);
-        // }
+        if (!pause)
+        {
+            PXR_MixedReality.EnableVideoSeeThrough(true);
+        }
     }
     
     private void Update()
