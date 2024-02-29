@@ -132,11 +132,6 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
             
             _sourceTextureSize = new Vector2(sourceRTDescriptor.width, sourceRTDescriptor.height);
             
-            
-            // blur final pass RT
-            cmd.GetTemporaryRT(_blurResultId, sourceRTDescriptor);
-            _blurResultRT = new RenderTargetIdentifier(_blurResultId);
-            
             // blur pass 1 RT
             sourceRTDescriptor.width /= 2;
             sourceRTDescriptor.height /= 2;
@@ -154,6 +149,14 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
             sourceRTDescriptor.height /= 2;
             cmd.GetTemporaryRT(_blurResultId2, sourceRTDescriptor);
             _blurResultRT2 = new RenderTargetIdentifier(_blurResultId2);
+            
+            // blur final pass RT
+            sourceRTDescriptor.width /= 2;
+            sourceRTDescriptor.height /= 2;
+            cmd.GetTemporaryRT(_blurResultId, sourceRTDescriptor);
+            _blurResultRT = new RenderTargetIdentifier(_blurResultId);
+            
+            base.Configure(cmd,cameraTextureDescriptor);
         }
 
         // This method is called before executing the render pass.
@@ -193,12 +196,8 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
                 cmd.DrawMesh(_targetMesh, _targetMeshTransform, screenMaterial, 0, -1, props);
             }
             
-            cmd.ReleaseTemporaryRT(_blurResultId0);
-            cmd.ReleaseTemporaryRT(_blurResultId1);
-            cmd.ReleaseTemporaryRT(_blurResultId2);
-            cmd.ReleaseTemporaryRT(_blurResultId);
-            
             context.ExecuteCommandBuffer(cmd);
+            cmd.Clear();
             CommandBufferPool.Release(cmd);
         }
 
@@ -255,16 +254,14 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
             
             buffer.ReleaseTemporaryRT(_blurVideoHorizonId);
         }
-        
-        // Cleanup any allocated resources that were created during the execution of this render pass.
-        public override void OnCameraCleanup(CommandBuffer cmd)
-        {
-            // 清理资源（如果需要）
-        }
 
         public override void FrameCleanup(CommandBuffer cmd)
         {
-
+            cmd.ReleaseTemporaryRT(_blurResultId0);
+            cmd.ReleaseTemporaryRT(_blurResultId1);
+            cmd.ReleaseTemporaryRT(_blurResultId2);
+            cmd.ReleaseTemporaryRT(_blurResultId);
+            base.FrameCleanup(cmd);
         }
     }
     
