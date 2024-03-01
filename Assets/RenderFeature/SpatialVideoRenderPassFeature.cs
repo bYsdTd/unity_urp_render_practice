@@ -98,7 +98,7 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
             // 使用原始的旋转和缩放，因为我们只改变位置
             Quaternion _backPlaneRotation = trans.rotation;
             
-            Debug.Log($"Camera.main.fieldOfView:  {Camera.main.fieldOfView} distance {_backPlaneDistance}");
+            // Debug.Log($"Camera.main.fieldOfView:  {Camera.main.fieldOfView} distance {_backPlaneDistance}");
             // 根据相似三角形，后平面的大小与前平面成比例
             // float halffov = Camera.main.fieldOfView * 0.5f;
             // float d1 = trans.localScale.y * 0.5f / Mathf.Tan(Mathf.Deg2Rad * halffov);

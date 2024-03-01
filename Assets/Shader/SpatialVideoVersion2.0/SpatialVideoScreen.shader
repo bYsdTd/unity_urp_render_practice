@@ -34,6 +34,7 @@ Shader "Custom/SpatialVideoScreen"
             {
                 float2 uv : TEXCOORD0;
                 float2 blurUV : TEXCOORD1;
+                float2 rawUV : TEXCOORD2;
                 float4 vertex : SV_POSITION;
             };
 
@@ -105,6 +106,7 @@ Shader "Custom/SpatialVideoScreen"
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
+                o.rawUV = TRANSFORM_TEX(v.uv, _MainTex);
                 o.uv = ComputeUV2(v);
                 o.blurUV = o.uv;
                 
@@ -120,16 +122,74 @@ Shader "Custom/SpatialVideoScreen"
                 return o;
             }
 
+            void HandleCorner(v2f i)
+            {
+                float2 texize = float2(1920, 1080);
+                float2 texelPos = i.rawUV * texize;
+                
+                float2 corner = float2(0.05, 0.05) * texize;
+                float cornerSize = max(corner.x, corner.y);
+                                // 左下
+                if (texelPos.x < cornerSize && texelPos.y < cornerSize)
+                {
+                    float2 anchorPos = float2(cornerSize, cornerSize);
+                    float distence = sqrt(dot(texelPos - anchorPos, texelPos - anchorPos));
+                    if (distence > cornerSize)
+                    {
+                        discard;
+                    }
+                }
+
+                // 左上
+                if (texelPos.x < cornerSize && texelPos.y > texize.y -  cornerSize)
+                {
+                    float2 anchorPos = float2(cornerSize, texize.y - cornerSize);
+                    float distence = sqrt(dot(texelPos - anchorPos, texelPos - anchorPos));
+                    if (distence > cornerSize)
+                    {
+                        discard;
+                    }
+                }
+
+                // 右下
+                if (texelPos.x > texize.x - cornerSize && texelPos.y < cornerSize)
+                {
+                    float2 anchorPos = float2(texize.x - cornerSize, cornerSize);
+                    float distence = sqrt(dot(texelPos - anchorPos, texelPos - anchorPos));
+                    if (distence > cornerSize)
+                    {
+                        discard;
+                    }
+                }
+
+                // 右上
+                if (texelPos.x > texize.x - cornerSize && texelPos.y > texize.y - cornerSize)
+                {
+                    float2 anchorPos = float2(texize.x - cornerSize, texize.y - cornerSize);
+                    float distence = sqrt(dot(texelPos - anchorPos, texelPos - anchorPos));
+                    if (distence > cornerSize)
+                    {
+                        discard;
+                    }
+                }
+
+                // if (blurUV.y < 0 || blurUV.y > 1 || blurUV.x < 0 || blurUV.x > 1)
+                // {
+                //     discard;
+                // }
+            }
             
             fixed4 frag (v2f i) : SV_Target
             {
                 float2 uv = i.uv;
                 float2 blurUV = i.blurUV;
+
+                HandleCorner(i);
                 
                 // 中心保持区域的UV范围
                 float2 minUV = float2(0, 0);
                 float2 maxUV = float2(1, 1);
-
+                
                 // 如果在中心保持区域内，直接映射UV到原图
                 // blurUV才是单目的0-1的uv,用它来判断区域
                 if (blurUV.x >= minUV.x && blurUV.x <= maxUV.x && blurUV.y >= minUV.y && blurUV.y <= maxUV.y)
@@ -143,6 +203,7 @@ Shader "Custom/SpatialVideoScreen"
                     float4 col = tex2D(_MainTex, uv);
                     
                     col = blur * lerp + col * (1-lerp);
+                    
                     return col;
                 }
                 else

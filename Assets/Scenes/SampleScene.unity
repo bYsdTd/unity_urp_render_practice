@@ -2381,7 +2381,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1346420514}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -2452,7 +2452,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _screenMaterial: {fileID: 2100000, guid: 7c68d520d47918f4ea6c2355bd670af1, type: 2}
-  _backPlaneDistance: 5
+  _backPlaneDistance: 8
   _Layout: 1
 --- !u!328 &1346420521
 VideoPlayer:
