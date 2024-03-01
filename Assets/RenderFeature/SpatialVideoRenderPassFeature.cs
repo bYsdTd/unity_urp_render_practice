@@ -141,6 +141,10 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
             
             _sourceTextureSize = new Vector2(sourceRTDescriptor.width, sourceRTDescriptor.height);
             
+            // blur final pass RT
+            cmd.GetTemporaryRT(_blurResultId, sourceRTDescriptor);
+            _blurResultRT = new RenderTargetIdentifier(_blurResultId);
+            
             // blur pass 1 RT
             sourceRTDescriptor.width /= 2;
             sourceRTDescriptor.height /= 2;
@@ -158,12 +162,6 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
             sourceRTDescriptor.height /= 2;
             // cmd.GetTemporaryRT(_blurResultId2, sourceRTDescriptor);
             // _blurResultRT2 = new RenderTargetIdentifier(_blurResultId2);
-            
-            // blur final pass RT
-            sourceRTDescriptor.width /= 2;
-            sourceRTDescriptor.height /= 2;
-            cmd.GetTemporaryRT(_blurResultId, sourceRTDescriptor);
-            _blurResultRT = new RenderTargetIdentifier(_blurResultId);
             
             base.Configure(cmd,cameraTextureDescriptor);
         }
