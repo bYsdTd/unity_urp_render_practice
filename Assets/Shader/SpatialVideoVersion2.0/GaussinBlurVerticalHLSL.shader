@@ -29,14 +29,16 @@
 
         TEXTURE2D_X(_MainTex);
         SAMPLER(sampler_MainTex);
-        float4 _MainTex_ST;
-        int _Layout; // 0 2d; 1 LR; 2 TB
         
         TEXTURE2D_X(_SourceTextureVertical);
         SAMPLER(sampler_SourceTextureVertical);
         
+        CBUFFER_START(UnityPerMaterial)
         float4 _SourceTextureSize;
-            
+        float4 _MainTex_ST;
+        int _Layout; // 0 2d; 1 LR; 2 TB
+        CBUFFER_END
+        
         Varyings vert (Attributes v)
         {
             Varyings o;

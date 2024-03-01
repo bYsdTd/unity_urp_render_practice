@@ -31,5 +31,5 @@ Material:
     m_Floats:
     - _Layout: 0
     m_Colors:
-    - _SourceTextureSize: {r: 240, g: 135, b: 0, a: 0}
+    - _SourceTextureSize: {r: 480, g: 270, b: 0, a: 0}
   m_BuildTextureStacks: []
