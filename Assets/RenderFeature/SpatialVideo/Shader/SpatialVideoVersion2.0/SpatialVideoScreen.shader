@@ -3,6 +3,7 @@ Shader "SpatialVideo/SpatialVideoScreen"
     Properties
     {
         _MainTex ("Texture", 2D) = "white" {}
+        _BlurTexture("Blur", 2D) = "white" {}
         _MaskTex("Mask", 2D) = "white" {}
         _PlaneSize("size of the Back Plane", Vector) = (1920, 1080, 0, 0)
         _PlanePosition ("Position of the Back Plane", Vector) = (0,0,0,0)
@@ -37,8 +38,8 @@ Shader "SpatialVideo/SpatialVideoScreen"
         TEXTURE2D(_MainTex);
         SAMPLER(sampler_MainTex);
 
-        TEXTURE2D(_BlurVideoTexture);
-        SAMPLER(sampler_BlurVideoTexture);
+        TEXTURE2D(_BlurTexture);
+        SAMPLER(sampler_BlurTexture);
 
         TEXTURE2D(_MaskTex);
         SAMPLER(sampler_MaskTex);
@@ -188,7 +189,7 @@ Shader "SpatialVideo/SpatialVideoScreen"
         {
             UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
 
-            // return SAMPLE_TEXTURE2D(_BlurVideoTexture, sampler_BlurVideoTexture, i.rawUV);
+            // return SAMPLE_TEXTURE2D(_BlurTexture, sampler_BlurTexture, i.rawUV);
             
             float2 uv = i.uv;
             float2 blurUV = i.blurUV;
@@ -207,7 +208,7 @@ Shader "SpatialVideo/SpatialVideoScreen"
 
                 // 用贴图混合
                 float lerp = SAMPLE_TEXTURE2D(_MaskTex, sampler_MaskTex, remappedUV).r;
-                float4 blur = SAMPLE_TEXTURE2D(_BlurVideoTexture, sampler_BlurVideoTexture, remappedUV);
+                float4 blur = SAMPLE_TEXTURE2D(_BlurTexture, sampler_BlurTexture, remappedUV);
                 // 屏幕uv用考虑双目重新计算过的uv
                 float4 col = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv);
                 
@@ -236,7 +237,7 @@ Shader "SpatialVideo/SpatialVideoScreen"
 
                 // 将边缘UV映射回原图的[0, 1]范围
                 float2 mappedEdgeUV = (edgeUV - minUV) / (maxUV - minUV);
-                return SAMPLE_TEXTURE2D(_BlurVideoTexture, sampler_BlurVideoTexture, mappedEdgeUV);
+                return SAMPLE_TEXTURE2D(_BlurTexture, sampler_BlurTexture, mappedEdgeUV);
             }
         }
         

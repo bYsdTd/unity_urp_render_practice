@@ -127,6 +127,7 @@ MonoBehaviour:
   m_Active: 1
   blurHorizon: {fileID: 2100000, guid: 0e4ec4be5533ac74994d01e71e9c95ca, type: 2}
   blurVertical: {fileID: 2100000, guid: e2ccc888e1767a540a405781acbc25e1, type: 2}
+  blurTexture: {fileID: 8400000, guid: e23f03f6e7c624a589ae636a095be1d7, type: 2}
 --- !u!114 &923882499321133385
 MonoBehaviour:
   m_ObjectHideFlags: 0

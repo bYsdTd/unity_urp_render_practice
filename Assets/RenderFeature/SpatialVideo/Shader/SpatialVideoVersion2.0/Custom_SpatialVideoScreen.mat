@@ -23,6 +23,14 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _BlurTexture:
+        m_Texture: {fileID: 8400000, guid: e23f03f6e7c624a589ae636a095be1d7, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BlurVideoTexture:
+        m_Texture: {fileID: 8400000, guid: e23f03f6e7c624a589ae636a095be1d7, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 8600000, guid: 010f8cd36611f7849bc4db467db05701, type: 2}
         m_Scale: {x: 1, y: 1}
@@ -42,6 +50,7 @@ Material:
     - _PlaneHeight: 2
     - _PlaneWidth: 2.8158922
     m_Colors:
+    - _PlaneNormal: {r: 0, g: 0, b: 1, a: 0}
     - _PlanePosition: {r: -0.5805227, g: 0, b: 0.81424403, a: 0}
     - _PlaneRotation: {r: 0.13087413, g: 298.77017, b: 0.03347252, a: 0}
     - _PlaneSize: {r: 3.2569761, g: 2, b: 0, a: 0}
