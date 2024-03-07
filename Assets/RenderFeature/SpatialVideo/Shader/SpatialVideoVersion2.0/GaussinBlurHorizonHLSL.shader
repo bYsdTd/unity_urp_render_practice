@@ -1,4 +1,4 @@
-﻿Shader "Custom/GaussinBlurHorizonHLSL"
+﻿Shader "SpatialVideo/GaussinBlurHorizonHLSL"
 {
     Properties
     {
@@ -29,10 +29,10 @@
             UNITY_VERTEX_OUTPUT_STEREO
         };
 
-        TEXTURE2D_X(_MainTex);
+        TEXTURE2D(_MainTex);
         SAMPLER(sampler_MainTex);
         
-        TEXTURE2D_X(_SourceTextureHorizon);
+        TEXTURE2D(_SourceTextureHorizon);
         SAMPLER(sampler_SourceTextureHorizon);
 
         CBUFFER_START(UnityPerMaterial)
@@ -45,6 +45,7 @@
         {
             Varyings o;
             // o.positionCS = TransformObjectToHClip(v.positionOS);
+            UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
             o.positionCS = v.positionOS;
             o.texcoord = TRANSFORM_TEX(v.uv, _MainTex);
 
@@ -76,7 +77,7 @@
 	        };
 	        for (int i = 0; i < 9; i++) {
 		        float offset = offsets[i] * 2.0 * GetSourceTexelSize().x;
-	            float4 c = SAMPLE_TEXTURE2D_X(_SourceTextureHorizon, sampler_SourceTextureHorizon, uv + float2(offset, 0.0));
+	            float4 c = SAMPLE_TEXTURE2D(_SourceTextureHorizon, sampler_SourceTextureHorizon, uv + float2(offset, 0.0));
 		        color += c.rgb * weights[i];
 	        }
 	        return float4(color, 1.0);
@@ -84,6 +85,7 @@
 
         float4 frag (Varyings i) : SV_Target
         {
+            UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
             // i.uv.y = 1 - i.uv.y;
 
             // return SAMPLE_TEXTURE2D_X(_MainTex, sampler_MainTex, i.texcoord);
@@ -99,6 +101,7 @@
             Cull Off
             Name "GaussinBlurHorizonHLSL"
             HLSLPROGRAM
+            #pragma multi_compile _ UNITY_SINGLE_PASS_STEREO STEREO_INSTANCING_ON STEREO_MULTIVIEW_ON
             #pragma vertex vert
             #pragma fragment frag
             ENDHLSL

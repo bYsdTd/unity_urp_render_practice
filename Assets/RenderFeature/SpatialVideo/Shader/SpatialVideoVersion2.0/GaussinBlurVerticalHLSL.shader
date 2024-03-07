@@ -1,4 +1,4 @@
-﻿Shader "Custom/GaussinBlurVerticalHLSL"
+﻿Shader "SpatialVideo/GaussinBlurVerticalHLSL"
 {
     Properties
     {
@@ -27,10 +27,10 @@
             UNITY_VERTEX_OUTPUT_STEREO
         };
 
-        TEXTURE2D_X(_MainTex);
+        TEXTURE2D(_MainTex);
         SAMPLER(sampler_MainTex);
         
-        TEXTURE2D_X(_SourceTextureVertical);
+        TEXTURE2D(_SourceTextureVertical);
         SAMPLER(sampler_SourceTextureVertical);
         
         CBUFFER_START(UnityPerMaterial)
@@ -42,6 +42,7 @@
         Varyings vert (Attributes v)
         {
             Varyings o;
+            UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
             // o.positionCS = TransformObjectToHClip(v.positionOS);
             o.positionCS = v.positionOS;
             o.texcoord = TRANSFORM_TEX(v.uv, _MainTex);
@@ -74,7 +75,7 @@
 			};
 			for (int i = 0; i < 9; i++) {
 				float offset = offsets[i] * GetSourceTexelSize().y;
-				 float4 c = SAMPLE_TEXTURE2D_X(_SourceTextureVertical, sampler_SourceTextureVertical, uv + float2(0.0, offset));
+				 float4 c = SAMPLE_TEXTURE2D(_SourceTextureVertical, sampler_SourceTextureVertical, uv + float2(0.0, offset));
 				color += c.rgb * weights[i];
 			}
 			return float4(color, 1.0);
@@ -82,6 +83,7 @@
 
         float4 frag (Varyings i) : SV_Target
         {
+            UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
             // i.uv.y = 1 - i.uv.y;
             
             // sample the texture
@@ -100,6 +102,7 @@
             Cull Off
             Name "GaussinBlurVerticalHLSL"
             HLSLPROGRAM
+            #pragma multi_compile _ UNITY_SINGLE_PASS_STEREO STEREO_INSTANCING_ON STEREO_MULTIVIEW_ON
             #pragma vertex vert
             #pragma fragment frag
             ENDHLSL

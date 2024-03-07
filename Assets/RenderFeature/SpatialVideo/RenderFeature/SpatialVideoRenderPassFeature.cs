@@ -203,6 +203,42 @@ public class SpatialVideoRenderPassFeature : ScriptableRendererFeature
                 cmd.DrawMesh(_targetMesh, _targetMeshTransform, screenMaterial, 0, -1, props);
             }
             
+            //-----------------------------测试---------------------------------
+            // // blur pass
+            // // 输出临时RT
+            // int tempId = Shader.PropertyToID("_BlurVideoTextureHorizon");
+            // cmd.GetTemporaryRT(tempId, screenMaterial.mainTexture.width /2, screenMaterial.mainTexture.height,
+            //     0, FilterMode.Bilinear, GraphicsFormat.R8G8B8A8_UNorm);
+            // cmd.SetRenderTarget(tempId);
+            // // 输入贴图
+            // cmd.SetGlobalTexture("_SourceTextureHorizon", screenMaterial.mainTexture);
+            //
+            // MaterialPropertyBlock props = new MaterialPropertyBlock();
+            // props.SetInt(Layout, _Layout);
+            // props.SetVector(SourceTextureSize, new Vector4(screenMaterial.mainTexture.width, screenMaterial.mainTexture.height, 0f, 0f));
+            //
+            // cmd.DrawMesh(GetMesh(), Matrix4x4.identity, _owner.blurHorizon, 0, -1, props);
+            
+            // // 渲染到屏幕
+            // // 设置深度测试和写入状态
+            // cmd.SetRenderTarget(_currentTarget, _currentDepth);
+            //
+            // if (_targetMesh != null && screenMaterial != null)
+            // {
+            //     MaterialPropertyBlock props2 = new MaterialPropertyBlock();
+            //     props2.SetVector(PlaneSize,_backPlaneSize);
+            //     props2.SetVector(PlanePosition, _backPlanePosition);
+            //     props2.SetMatrix(PlaneWorldToLocalMatrix, _backPlaneWorldToLocal);
+            //     props2.SetVector(PlaneNormal, _backPlaneNormal);
+            //     // cmd.SetGlobalTexture("_BlurVideoTexture", screenMaterial.mainTexture);
+            //     cmd.SetGlobalTexture("_BlurVideoTexture", tempId);
+            //     cmd.DrawMesh(_targetMesh, _targetMeshTransform, screenMaterial, 0, -1, props);
+            // }
+            //
+            // cmd.ReleaseTemporaryRT(tempId);
+            //-----------------------------测试---------------------------------
+
+            
             context.ExecuteCommandBuffer(cmd);
             cmd.Clear();
             CommandBufferPool.Release(cmd);
